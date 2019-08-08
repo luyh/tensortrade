@@ -2,11 +2,13 @@ import pandas as pd
 
 from typing import List, Dict, Callable
 
-from tensortrade.rewards import RewardStrategy
+from tensortrade.environments.rewards import RewardStrategy
 from tensortrade.exchanges import AssetExchange
 
 
 class IncrementalProfitStrategy(RewardStrategy):
+    '''Calculate the agents rewards based on the incremental profits made by its actions'''
+
     def __init__(self, base_symbol: str = 'USD', asset_symbol: str = 'BTC'):
         self.last_bought = 0
         self.last_sold_price = -1

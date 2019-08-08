@@ -1,17 +1,35 @@
 from typing import Union, Dict
 
-from tensortrade.actions import ActionStrategy, TradeType
+from tensortrade.environments.actions import ActionStrategy, TradeType
 from tensortrade.exchanges import AssetExchange
 
 
 class SimpleContinuousStrategy(ActionStrategy):
-    def __init__(self, base_sybmol: str = 'USD', asset_symbol: str = 'BTC'):
+    '''Simple continuous strategy, that executes trades on a continuous basis.'''
+
+    def __init__(self, base_symbol: str = 'USD', asset_symbol: str = 'BTC'):
+        '''
+            # Arguments
+                base_symbol: optional the symbol that defines the notional value
+                asset_symbol: optional the asset symbol
+        '''
+
         super().__init__(action_space_shape=(1, 1), continuous_action_space=True)
 
         self.base_symbol = base_symbol
         self.asset_symbol = asset_symbol
 
     def suggest_trade(self, action: Union[int, tuple], exchange: AssetExchange):
+        '''Suggest a trade to the trading environment
+
+            # Arguments
+                action: optional number of timesteps used to calculate the trade amount
+                exchange: the AssetExchange
+
+            # Returns
+                the asset symbol, the type of trade, amount and price
+
+        '''
         action_type, trade_amount = action
         trade_type = TradeType(int(action_type * 3))
 
