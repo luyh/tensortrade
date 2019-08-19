@@ -16,15 +16,16 @@ import numpy as np
 import pandas as pd
 
 from typing import Union
-from abc import ABCMeta, abstractmethod
-from sklearn.base import BaseEstimator, TransformerMixin
+from abc import abstractmethod
+from sklearn.base import TransformerMixin
 
 TransformableList = Union[np.ndarray, pd.DataFrame]
 
 
-class Transformer(BaseEstimator, TransformerMixin, metaclass=ABCMeta):
-    """An abstract base class for transformers within feature pipelines."""
+class Transformer(TransformerMixin):
+    """An abstract transformer for use within feature pipelines."""
 
+    @abstractmethod
     def __init__(self, *args, **kwargs):
         pass
 
@@ -34,13 +35,13 @@ class Transformer(BaseEstimator, TransformerMixin, metaclass=ABCMeta):
 
         Args:
             X: The set of data to train the model on.
-            y (optional): The target output to train with.
+            y (optional): The target output to train on.
         """
         raise NotImplementedError
 
     @abstractmethod
     def transform(self, X: TransformableList):
-        """Transform the data set with the fit model.
+        """Transform the data set with the pre-fit model.
 
         Args:
             X: The set of data to transform.
