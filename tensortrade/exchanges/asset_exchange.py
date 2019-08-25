@@ -27,16 +27,15 @@ TypeString = Union[type, str]
 class AssetExchange(object, metaclass=ABCMeta):
     """An abstract asset exchange for use within a trading environment."""
 
-    @abstractmethod
     def __init__(self, dtype: TypeString = np.float16):
         """
-        Args:
+        Arguments:
             dtype: A type or str corresponding to the dtype of the `observation_space`.
         """
         self._dtype = dtype
 
     @property
-    def dtype(self):
+    def dtype(self) -> TypeString:
         """A type or str corresponding to the dtype of the `observation_space`."""
         return self._dtype
 
@@ -45,7 +44,7 @@ class AssetExchange(object, metaclass=ABCMeta):
         self._dtype = dtype
 
     @property
-    def base_precision(self):
+    def base_precision(self) -> float:
         """The floating point precision of the base asset."""
         return self._base_precision
 
@@ -54,7 +53,7 @@ class AssetExchange(object, metaclass=ABCMeta):
         self._base_precision = base_precision
 
     @property
-    def asset_precision(self):
+    def asset_precision(self) -> float:
         """The floating point precision of the asset to be traded."""
         return self._asset_precision
 
@@ -151,7 +150,7 @@ class AssetExchange(object, metaclass=ABCMeta):
     def current_price(self, symbol: str) -> float:
         """The current price of an asset on the exchange, denoted in the base symbol.
 
-        Args:
+        Arguments:
             symbol: The exchange symbol of the asset to get the price for.
 
         Returns:
@@ -163,7 +162,7 @@ class AssetExchange(object, metaclass=ABCMeta):
     def execute_trade(self, trade: Trade) -> Trade:
         """Execute a trade on the exchange, accounting for slippage.
 
-        Args:
+        Arguments:
             trade: The trade to execute.
 
         Returns:
