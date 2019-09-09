@@ -20,11 +20,22 @@ from tensorforce.contrib.openai_gym import OpenAIGym
 sys.path.append( os.path.dirname( os.path.abspath( '' ) ) )
 
 from tensortrade.environments import TradingEnvironment
-from tensortrade.exchanges.simulated import FBMExchange
+from tensortrade.exchanges.simulated import FBMExchange,SimulatedExchange
 from tensortrade.actions import DiscreteActionStrategy
 from tensortrade.rewards import SimpleProfitStrategy
+import pandas as pd
 
-exchange = FBMExchange( times_to_generate=100000 )
+df = pd.read_csv('../data/coinbase-1h-btc-usd.csv')
+df = df[['Open','High','Low','Close','VolumeFrom']]
+df.rename(columns={'Open': 'open',
+                   'High': 'high',
+                   'Low' : 'low',
+                   'Close':'close',
+                   'VolumeFrom':'volumn'
+                    }, inplace = True)
+
+#exchange = FBMExchange( times_to_generate=100000 )
+exchange = SimulatedExchange(data_frame=df, base_instrument='USD')
 action_strategy = DiscreteActionStrategy()
 reward_strategy = SimpleProfitStrategy()
 

@@ -29,7 +29,7 @@ from tensortrade.features.feature_pipeline import FeaturePipeline
 from tensortrade.strategies import TradingStrategy
 
 
-class TensorforceTradingStrategy(TradingStrategy):
+class TensorforceStrategy(TradingStrategy):
     """A trading strategy capable of self tuning, training, and evaluating with Tensorforce."""
 
     def __init__(self, environment: TradingEnvironment, agent_spec: Dict = None, network_spec: Dict = None, **kwargs):
