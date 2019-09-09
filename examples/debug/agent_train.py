@@ -123,7 +123,10 @@ def episode_finished(r):
 
 
 # Start learning
-runner.run( episodes=300, max_episode_timesteps=10000, episode_finished=episode_finished )
+if sys.platform == 'win32':
+    runner.run( episodes=10, max_episode_timesteps=1000, episode_finished=episode_finished )
+else:
+    runner.run(episodes=300, max_episode_timesteps=10000, episode_finished=episode_finished)
 runner.close()
 
 # Print statistics
