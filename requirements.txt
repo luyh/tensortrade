@@ -1,9 +1,3 @@
-numpy
-pandas
-sklearn
-gym
-gin-config
-stochastic
-ccxt
-tensorflow
-ray
+numpy==1.17.0
+pandas==0.25.0
+gym==0.14.0
