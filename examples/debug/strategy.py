@@ -52,14 +52,8 @@ strategy = TensorforceTradingStrategy(environment=environment,
                                       agent_spec=agent_spec,
                                       network_spec=network_spec)
 
-# Callback function printing episode statistics
-def episode_finished(r):
-    print( "Finished episode {ep} after {ts} timesteps (reward: {reward})".format( ep=r.episode, ts=r.episode_timestep,
-                                                                                   reward=r.episode_rewards[-1] ) )
-
 performance = strategy.run(episodes=2,
-                           testing=True,
-                           episode_callback=episode_finished)
+                           testing=True)
 
 print(performance[-5:])
 print('done')
