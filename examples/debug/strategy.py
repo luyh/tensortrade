@@ -23,7 +23,10 @@ action_strategy = DiscreteActionStrategy(n_actions=20, instrument_symbol='ETH/BT
 
 exchange = FBMExchange(base_instrument='BTC',
                        timeframe='1h',
+                       times_to_generate = int(1e6),
                        should_pretransform_obs=True)
+
+exchange.reset()
 
 environment = TradingEnvironment(exchange=exchange,
                                  action_strategy=action_strategy,
