@@ -20,6 +20,9 @@ from tensorforce.contrib.openai_gym import OpenAIGym
 sys.path.append( os.path.dirname( os.path.abspath( '' ) ) )
 
 from tensortrade.environments import TradingEnvironment
+from tensortrade.features.scalers import MinMaxNormalizer
+from tensortrade.features.stationarity import FractionalDifference
+from tensortrade.features import FeaturePipeline
 from tensortrade.exchanges.simulated import FBMExchange,SimulatedExchange
 from tensortrade.actions import DiscreteActionStrategy
 from tensortrade.rewards import SimpleProfitStrategy
@@ -34,6 +37,12 @@ df.rename(columns={'Open': 'open',
                    'VolumeFrom':'volumn'
                     }, inplace = True)
 
+normalize = MinMaxNormalizer(inplace=True)
+difference = FractionalDifference(difference_order=0.6,
+                                  inplace=True,
+                                  all_column_names=["open", "high", "low", "close", "volume"])
+feature_pipeline = FeaturePipeline(steps=[normalize, difference])
+
 #exchange = FBMExchange( times_to_generate=100000 )
 exchange = SimulatedExchange(data_frame=df, base_instrument='USD')
 action_strategy = DiscreteActionStrategy()
@@ -42,7 +51,7 @@ reward_strategy = SimpleProfitStrategy()
 env = TradingEnvironment( exchange=exchange,
                           action_strategy=action_strategy,
                           reward_strategy=reward_strategy,
-                          feature_pipeline=None )
+                          feature_pipeline=feature_pipeline )
 
 agent_config = {
     "type": "dqn_agent",
@@ -97,13 +106,23 @@ agent_config = {
     }
 }
 
+ppo_agent_spec = {
+    "type": "ppo_agent",
+    "step_optimizer": {
+        "type": "adam",
+        "learning_rate": 1e-4
+    },
+    "discount": 0.99,
+    "likelihood_ratio_clipping": 0.2,
+}
+
 network_spec = [
     dict( type='dense', size=64 ),
     dict( type='dense', size=32 )
 ]
 
 agent = Agent.from_spec(
-    spec=agent_config,
+    spec=ppo_agent_spec,
     kwargs=dict(
         states=env.states,
         actions=env.actions,
