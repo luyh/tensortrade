@@ -1,18 +1,19 @@
 import ccxt
-import os
-from tensortrade.exchanges.live.ccxt_exchange import CCXTExchange
+import os,time
 
-okex = ccxt.okex()
+okex = ccxt.okex3()
 okex.apiKey = os.getenv('apiKey')
 okex.secret = os.getenv('secret')
+okex.password = os.getenv('password')
+print(okex.fetch_balance())
 
-exchange = CCXTExchange(exchange = okex,
-                        observation_symbol='BTC/USDT',
-                        base_instrument = 'USDT',
-                        timeframe='1h')
-balance = exchange.balance
+from tensortrade.exchanges.live.ccxt_exchange import CCXTExchange
+exchange = CCXTExchange(exchange = okex,observation_symbol='BTC/USDT', timeframe='1h')
+print(exchange.balance)
 
-next_observation = exchange.next_observation()
+for _ in range(5):
+    next_observation = exchange.next_observation()
+    time.sleep(3)
 
 
 

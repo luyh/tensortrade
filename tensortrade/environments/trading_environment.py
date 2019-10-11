@@ -227,8 +227,8 @@ class TradingEnvironment(Environment, gym.Env):
             terminal (bool): If `True`, the environment is complete and should be restarted.
             reward (float): An amount corresponding to the benefit earned by the action taken this timestep.
         """
-        observation, done, reward, _ = self.step(action)
-        return observation, reward, done
+        observation, reward, done, info = self.step(action)
+        return observation, done, reward
 
     def reset(self) -> pd.DataFrame:
         """Resets the state of the environment and returns an initial observation.
