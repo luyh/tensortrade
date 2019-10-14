@@ -4,7 +4,11 @@ from .tensorforce_trading_strategy import TensorforceTradingStrategy
 from .neat_trading_strategy import NeatTradingStrategy
 
 
-_registry = {}
+_registry = {
+    'baselines':'StableBaselinesTradingStrategy',
+    'tensorforce':'TensorforceTradingStrategy',
+    'neat':'NeatTradingStrategy'
+}
 
 
 def get(identifier: str) -> TradingStrategy:
@@ -20,4 +24,3 @@ def get(identifier: str) -> TradingStrategy:
         raise KeyError(
             'Identifier {} is not associated with any `TradingStrategy`.'.format(identifier))
     return _registry[identifier]
-# from .tensorforce_trading_strategy import TensorforceTradingStrategy
