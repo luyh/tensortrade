@@ -15,7 +15,7 @@ from tensortrade.strategies import TensorforceTradingStrategy
 normalize = MinMaxNormalizer(inplace=True)
 difference = FractionalDifference(difference_order=0.6,
                                   inplace=True,
-                                  all_column_names=["open", "high", "low", "close", "volume"])
+                                 )
 feature_pipeline = FeaturePipeline(steps=[normalize, difference])
 
 reward_strategy = SimpleProfitStrategy()

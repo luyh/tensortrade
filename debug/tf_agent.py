@@ -39,8 +39,7 @@ df.rename(columns={'Open': 'open',
 
 normalize = MinMaxNormalizer(inplace=True)
 difference = FractionalDifference(difference_order=0.6,
-                                  inplace=True,
-                                  all_column_names=["open", "high", "low", "close", "volume"])
+                                  inplace=True,)
 feature_pipeline = FeaturePipeline(steps=[normalize, difference])
 
 #exchange = FBMExchange( times_to_generate=100000 )
