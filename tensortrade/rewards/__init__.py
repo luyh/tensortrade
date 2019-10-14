@@ -4,7 +4,8 @@ from .risk_adjusted_return_strategy import RiskAdjustedReturnStrategy
 
 _registry = {
     'simple': SimpleProfitStrategy(),
-    'risk-adjusted': RiskAdjustedReturnStrategy()
+    'risk-adjusted': RiskAdjustedReturnStrategy(),
+    'neat': NeatProfitStrategy(),
 }
 
 

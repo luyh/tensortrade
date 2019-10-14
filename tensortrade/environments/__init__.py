@@ -1,11 +1,17 @@
 from .trading_environment import TradingEnvironment
-
+from .neat_environment import NeatEnvironment
 
 _registry = {
+
     'basic': {
         'exchange': 'simulated',
         'action_strategy': 'discrete',
         'reward_strategy': 'simple'
+    },
+    'neat': {
+        'exchange': 'simulated',
+        'action_strategy':  'discrete',
+        'reward_strategy': 'neat'
     }
 }
 
