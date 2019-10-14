@@ -36,33 +36,11 @@ environment = TradingEnvironment(exchange=exchange,
 model = PPO2
 policy = MlpLnLstmPolicy
 params = { "learning_rate": 1e-5 }
-agent = model(policy, environment, model_kwargs=params)
-
 
 sb_strategy = StableBaselinesTradingStrategy(environment=environment,
                                             model=model,
                                             policy=policy,
                                              model_kwargs=params)
-
-##tensorforce_stragegy
-# agent_spec = {
-#     "type": "ppo_agent",
-#     "step_optimizer": {
-#         "type": "adam",
-#         "learning_rate": 1e-4
-#     },
-#     "discount": 0.99,
-#     "likelihood_ratio_clipping": 0.2,
-# }
-#
-# network_spec = [
-#     dict(type='dense', size=64, activation="tanh"),
-#     dict(type='dense', size=32, activation="tanh")
-# ]
-#
-# a_strategy = TensorforceTradingStrategy(environment=environment,
-#                                       agent_spec=agent_spec,
-#                                       network_spec=network_spec)
 
 performance = sb_strategy.run(episodes=1)
 
