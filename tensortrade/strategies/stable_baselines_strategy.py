@@ -86,10 +86,11 @@ class StableBaselinesTradingStrategy(TradingStrategy):
 
         performance = {}
 
-        while (steps is not None and (steps == 0 or steps_completed < steps)) or (episodes is not None and episodes_completed < episodes):
+        while (steps is not None and (steps == 0 or steps_completed < steps)) \
+                or (episodes is not None and episodes_completed < episodes):
             actions, state = self._agent.predict(obs, state=state, mask=dones)
             obs, rewards, dones, info = self._environment.step(actions)
-
+            if steps_completed %10 ==0:print('step:  ',steps_completed)
             steps_completed += 1
             average_reward -= average_reward / steps_completed
             average_reward += rewards[0] / (steps_completed + 1)
