@@ -19,7 +19,7 @@ from tensortrade.rewards import RewardStrategy
 from tensortrade.trades import TradeType, Trade
 
 
-class SimpleProfitStrategy(RewardStrategy):
+class NeatProfitStrategy(RewardStrategy):
     """A reward strategy that rewards the agent for profitable trades and prioritizes trading over not trading.
 
     This strategy supports simple action strategies that trade a single position in a single instrument at a time.
@@ -32,10 +32,10 @@ class SimpleProfitStrategy(RewardStrategy):
 
     def get_reward(self, current_step: int, trade: Trade) -> float:
         """Reward
-        * -1 for not holding a position
-        * 1 for holding a position
-        * 2 for opening a position
-        * 1 + 5^(log_10(profit)) for closing a position.
+        -1 for not holding a position,
+        1 for holding a position,
+        2 for opening a position, and
+        1 + 5^(log_10(profit)) for closing a position.
 
         The 5^(log_10(profit)) function simply slows the growth of the reward as trades get large.
         """

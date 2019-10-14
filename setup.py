@@ -51,15 +51,9 @@ setup(
         'gym==0.14.0'
     ],
     extras_require={
-<<<<<<< HEAD
         'tf': ['tensorflow==1.13.1'],
         'tf-gpu': ['tensorflow-gpu==1.13.1'],
         'tensorforce': ['tensorforce==0.5.2'],
-=======
-        'tf': ['tensorflow==2.0.0'],
-        'tf-gpu': ['tensorflow==2.0.0'],
-        'tensorforce': ['tensorforce==0.4.4'],
->>>>>>> updating to TF2.0 and bumping CCXT to 1.18.2249
         'baselines': ['stable-baselines==2.8.0', 'mpi4py'],
         'talib': ['TA-Lib==0.4.17'],
         'fbm': ['stochastic==0.4.0'],
