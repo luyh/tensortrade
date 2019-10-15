@@ -1,7 +1,7 @@
 import pandas as pd
 
 STEP = 100
-df = pd.read_csv('./data/coinbase-1h-btc-usd.csv')
+df = pd.read_csv('../data/coinbase-1h-btc-usd.csv')
 df = df[['Open','High','Low','Close','VolumeFrom']][:STEP]
 df.rename(columns={'Open': 'open',
                    'High': 'high',
