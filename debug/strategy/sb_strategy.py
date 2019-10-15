@@ -1,14 +1,7 @@
-from tensortrade.environments import TradingEnvironment
-from tensortrade.exchanges.simulated import FBMExchange,SimulatedExchange
-from tensortrade.features.scalers import MinMaxNormalizer
-from tensortrade.features.stationarity import FractionalDifference
-from tensortrade.features import FeaturePipeline
-from tensortrade.rewards import SimpleProfitStrategy
-from tensortrade.actions import DiscreteActionStrategy
 import pandas as pd
 
 df = pd.read_csv('./data/coinbase-1h-btc-usd.csv')
-df = df[['Open','High','Low','Close','VolumeFrom']]
+df = df[['Open','High','Low','Close','VolumeFrom']][:3000]
 df.rename(columns={'Open': 'open',
                    'High': 'high',
                    'Low' : 'low',
@@ -16,6 +9,13 @@ df.rename(columns={'Open': 'open',
                    'VolumeFrom':'volumn'
                     }, inplace = True)
 
+from tensortrade.environments import TradingEnvironment
+from tensortrade.exchanges.simulated import FBMExchange,SimulatedExchange
+from tensortrade.features.scalers import MinMaxNormalizer
+from tensortrade.features.stationarity import FractionalDifference
+from tensortrade.features import FeaturePipeline
+from tensortrade.rewards import SimpleProfitStrategy
+from tensortrade.actions import DiscreteActionStrategy
 
 exchange = SimulatedExchange(data_frame=df, base_instrument='USD')
 
@@ -56,7 +56,7 @@ sb_strategy = StableBaselinesTradingStrategy(environment=environment,
                                             policy=policy,
                                              model_kwargs=params)
 
-performance = sb_strategy.run(episodes=2,steps=1000)
+performance = sb_strategy.run(episodes=2,steps=5000)
 
 print(performance[-5:])
 print('done')
