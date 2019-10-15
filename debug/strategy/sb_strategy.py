@@ -1,7 +1,8 @@
 import pandas as pd
 
+STEP = 100
 df = pd.read_csv('./data/coinbase-1h-btc-usd.csv')
-df = df[['Open','High','Low','Close','VolumeFrom']][:3000]
+df = df[['Open','High','Low','Close','VolumeFrom']][:STEP]
 df.rename(columns={'Open': 'open',
                    'High': 'high',
                    'Low' : 'low',
@@ -56,7 +57,7 @@ sb_strategy = StableBaselinesTradingStrategy(environment=environment,
                                             policy=policy,
                                              model_kwargs=params)
 
-performance = sb_strategy.run(episodes=2,steps=5000)
+performance = sb_strategy.run(episodes=5)
 
 print(performance[-5:])
 print('done')
