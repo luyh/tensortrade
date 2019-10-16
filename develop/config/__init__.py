@@ -1,0 +1,2 @@
+STEP = 100
+EPISODE = 5

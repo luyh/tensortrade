@@ -166,6 +166,6 @@ if __name__ == '__main__':
 
     trades = exchange.trades
 
-    print('debug')
+    print('develop')
 
 

@@ -1,23 +1,9 @@
-import sys
-import os
-import warnings
+STEP = 100
+EPISODE = 5
 
-
-def warn(*args, **kwargs):
-    pass
-
-
-warnings.warn = warn
-warnings.simplefilter( action='ignore', category=FutureWarning )
-
-import gym
 import numpy as np
-
 from tensorforce.agents import Agent
 from tensorforce.execution import Runner
-from tensorforce.contrib.openai_gym import OpenAIGym
-
-sys.path.append( os.path.dirname( os.path.abspath( '' ) ) )
 
 from tensortrade.environments import TradingEnvironment
 from tensortrade.features.scalers import MinMaxNormalizer
@@ -43,7 +29,10 @@ difference = FractionalDifference(difference_order=0.6,
 feature_pipeline = FeaturePipeline(steps=[normalize, difference])
 
 #exchange = FBMExchange( times_to_generate=100000 )
-exchange = SimulatedExchange(data_frame=df, base_instrument='USD')
+exchange = SimulatedExchange(data_frame=df[:STEP],
+                             base_instrument='USDT',
+                             should_pretransform_obs=True
+                             )
 action_strategy = DiscreteActionStrategy()
 reward_strategy = SimpleProfitStrategy()
 
@@ -143,9 +132,9 @@ def episode_finished(r):
 
 # Start learning
 if sys.platform == 'win32':
-    runner.run( episodes=2, max_episode_timesteps=100, episode_finished=episode_finished )
+    runner.run( episodes=EPISODE, max_episode_timesteps=100, episode_finished=episode_finished )
 else:
-    runner.run(episodes=300, max_episode_timesteps=10000, episode_finished=episode_finished)
+    runner.run(episodes=EPISODE*20, max_episode_timesteps=10000, episode_finished=episode_finished)
 runner.close()
 
 # Print statistics
