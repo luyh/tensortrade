@@ -1,8 +1,8 @@
-from  ..data.load_data import df
-from ..config import STEP,EPISODE
+from develop.envirnment.data.load_data import df
+from ..config import STEP
 
 from tensortrade.environments import TradingEnvironment
-from tensortrade.exchanges.simulated import FBMExchange,SimulatedExchange
+from tensortrade.exchanges.simulated import SimulatedExchange
 from tensortrade.features.scalers import MinMaxNormalizer
 from tensortrade.features.stationarity import FractionalDifference
 from tensortrade.features import FeaturePipeline
