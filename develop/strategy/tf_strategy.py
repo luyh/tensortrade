@@ -94,7 +94,7 @@ def load_strategy(df_file_path,agent_spec = ppo_spec):
     return strategy
 
 if __name__ == '__main__':
-    df_file_path = './environment/exchange/data/coinbase-1h-btc-usd.csv'
+    df_file_path = './exchange/data/coinbase-1h-btc-usd.csv'
     strategy = load_strategy(df_file_path, agent_spec=ppo_spec)
 
     performance = strategy.run(episodes=EPOSIDE, testing=True)
