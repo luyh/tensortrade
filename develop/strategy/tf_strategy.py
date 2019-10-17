@@ -1,4 +1,4 @@
-EPISODE = 5000
+EPOSIDE = 5000
 from environment.btc_simulate import get_env
 
 from tensortrade.strategies import TensorforceTradingStrategy
@@ -102,7 +102,7 @@ def episode_callback(r):
 
 
 if __name__ == '__main__':
-    df_file_path = './environment/exchange/data/coinbase-1h-btc-usd.csv'
+    df_file_path = 'environment/exchange/data/coinbase-1h-btc-usd.csv'
     strategy = load_strategy(df_file_path, agent_spec=ppo_spec)
 
     if False:
