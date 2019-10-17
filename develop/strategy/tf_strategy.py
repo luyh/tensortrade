@@ -1,5 +1,5 @@
-from develop import EPOSIDE
-from develop.strategy.environment.btc_simulate import get_env
+from config import EPOSIDE
+from environment.btc_simulate import get_env
 
 from tensortrade.strategies import TensorforceTradingStrategy
 from tensorforce.agents import Agent

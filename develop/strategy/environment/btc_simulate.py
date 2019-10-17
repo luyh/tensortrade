@@ -1,5 +1,5 @@
 import pandas as pd
-from develop import STEP,EPOSIDE
+from develop.strategy.config import STEP,EPOSIDE
 def load_data(file_path):
     df = pd.read_csv(file_path)
     df = df[['Open','High','Low','Close','VolumeFrom']]
