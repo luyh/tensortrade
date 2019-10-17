@@ -1,4 +1,4 @@
-from config import EPOSIDE
+EPISODE = 5000
 from environment.btc_simulate import get_env
 
 from tensortrade.strategies import TensorforceTradingStrategy

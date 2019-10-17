@@ -1,2 +1,0 @@
-EPOSIDE = 5000
-STEP = 100
