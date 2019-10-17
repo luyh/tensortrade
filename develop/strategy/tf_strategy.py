@@ -93,11 +93,25 @@ def load_strategy(df_file_path,agent_spec = ppo_spec):
 
     return strategy
 
+import numpy as np
+def episode_callback(r):
+    if r.global_episode %10 ==0:
+        print( '  average_reward:  {}'.format(round(np.mean(r.episode_rewards[:-10])),2))
+
+    return True
+
+
 if __name__ == '__main__':
-    df_file_path = './exchange/data/coinbase-1h-btc-usd.csv'
+    df_file_path = './environment/exchange/data/coinbase-1h-btc-usd.csv'
     strategy = load_strategy(df_file_path, agent_spec=ppo_spec)
 
-    performance = strategy.run(episodes=EPOSIDE, testing=True)
+    if True:
+        strategy.restore_agent(path="./agents/ppo_btc_1h")
+
+    performance = strategy.run(episodes=EPOSIDE, testing=False,episode_callback=episode_callback)
+
+    strategy.save_agent(path="./agents/ppo_btc_1h")
+    strategy._runner.close()
 
     print(performance[-5:])
     print('done')
