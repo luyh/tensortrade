@@ -1,4 +1,5 @@
-from develop.envirnment.btc_simulate import environment
+from develop import EPOSIDE
+from develop.strategy.environment.btc_simulate import get_env
 
 from tensortrade.strategies import TensorforceTradingStrategy
 from tensorforce.agents import Agent
@@ -72,18 +73,31 @@ network_spec = [
     dict( type='dense', size=32 )
 ]
 
-def agent(sepc = ppo_spec):
+def agent(env,sepc = ppo_spec):
 
     return Agent.from_spec(
         spec=sepc,
         kwargs=dict(
-            states=environment.states,
-            actions=environment.actions,
+            states=env.states,
+            actions=env.actions,
             network=network_spec,
         )
     )
 
-strategy = TensorforceTradingStrategy(environment=environment,
-                                      agent_spec=agent(sepc = ppo_spec),
-                                      network_spec=network_spec)
 
+def load_strategy(df_file_path,agent_spec = ppo_spec):
+    env = get_env(df_file_path)
+    strategy = TensorforceTradingStrategy(environment=env,
+                                          agent_spec= agent_spec,
+                                          network_spec=network_spec)
+
+    return strategy
+
+if __name__ == '__main__':
+    df_file_path = './environment/exchange/data/coinbase-1h-btc-usd.csv'
+    strategy = load_strategy(df_file_path, agent_spec=ppo_spec)
+
+    performance = strategy.run(episodes=EPOSIDE, testing=True)
+
+    print(performance[-5:])
+    print('done')

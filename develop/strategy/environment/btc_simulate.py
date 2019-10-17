@@ -1,5 +1,5 @@
 import pandas as pd
-
+from develop import STEP,EPOSIDE
 def load_data(file_path):
     df = pd.read_csv(file_path)
     df = df[['Open','High','Low','Close','VolumeFrom']]
@@ -44,8 +44,6 @@ def get_env(file_path):
     return environment
 
 if __name__ == '__main__':
-    STEP = 100
-
     file_path = './exchange/data/coinbase-1h-btc-usd.csv'
     environment = get_env(file_path)
 
