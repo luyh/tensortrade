@@ -80,8 +80,8 @@ class TensorforceTradingStrategy(TradingStrategy):
         with open(path_with_ext) as json_file:
             spec = json.load(json_file)
 
-            self._agent_spec = spec.agent
-            self._network_spec = spec.network
+            self._agent_spec = spec['agent']
+            self._network_spec = spec['network']
 
         self._agent = Agent.from_spec(spec=self._agent_spec,
                                       kwargs=dict(network=self._network_spec,
@@ -91,7 +91,7 @@ class TensorforceTradingStrategy(TradingStrategy):
         path_without_ext = path_with_ext.replace('.json', '')
         model_path = model_path or '{}/agent'.format(path_without_ext)
 
-        self._agent.restore_model(file=model_path)
+        self._agent.restore_model(directory=model_path)
 
         self._runner = Runner(agent=self._agent, environment=self._environment)
 
