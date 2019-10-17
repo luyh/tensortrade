@@ -1,16 +1,17 @@
-STEP = 100
-
 import pandas as pd
 
-df = pd.read_csv('./exchange/data/coinbase-1h-btc-usd.csv')
-df = df[['Open','High','Low','Close','VolumeFrom']]
+def load_data(file_path):
+    df = pd.read_csv(file_path)
+    df = df[['Open','High','Low','Close','VolumeFrom']]
 
-df.rename(columns={'Open': 'open',
-                   'High': 'high',
-                   'Low' : 'low',
-                   'Close':'close',
-                   'VolumeFrom':'volumn'
-                    }, inplace = True)
+    df.rename(columns={'Open': 'open',
+                       'High': 'high',
+                       'Low' : 'low',
+                       'Close':'close',
+                       'VolumeFrom':'volumn'
+                        }, inplace = True)
+
+    return df
 
 from tensortrade.environments import TradingEnvironment
 from tensortrade.exchanges.simulated import SimulatedExchange
@@ -20,31 +21,35 @@ from tensortrade.features import FeaturePipeline
 from tensortrade.rewards import SimpleProfitStrategy
 from tensortrade.actions import DiscreteActionStrategy
 
+def get_env(file_path):
+    df = load_data(file_path)
 
-normalize = MinMaxNormalizer(inplace=True)
-difference = FractionalDifference(difference_order=0.6,inplace=True)
-feature_pipeline = FeaturePipeline(steps=[normalize, difference])
+    normalize = MinMaxNormalizer(inplace=True)
+    difference = FractionalDifference(difference_order=0.6, inplace=True)
+    feature_pipeline = FeaturePipeline(steps=[normalize, difference])
 
-reward_strategy = SimpleProfitStrategy()
-action_strategy = DiscreteActionStrategy(n_actions=20, instrument_symbol='BTC/USDT')
+    reward_strategy = SimpleProfitStrategy()
+    action_strategy = DiscreteActionStrategy(n_actions=20, instrument_symbol='BTC/USDT')
 
-exchange = SimulatedExchange(base_instrument='USDT',
-                             should_pretransform_obs=True,
-                             feature_pipeline=feature_pipeline
-                             )
+    exchange = SimulatedExchange(base_instrument='USDT',
+                                 should_pretransform_obs=True,
+                                 feature_pipeline=feature_pipeline
+                                 )
+    exchange.data_frame = df[:STEP]
+    environment = TradingEnvironment(exchange=exchange,
+                                     action_strategy=action_strategy,
+                                     reward_strategy=reward_strategy,
+                                     feature_pipeline=feature_pipeline)
 
-
-
-exchange.data_frame = df[:STEP]
-
-environment = TradingEnvironment(exchange=exchange,
-                                 action_strategy=action_strategy,
-                                 reward_strategy=reward_strategy,
-                                 feature_pipeline=feature_pipeline)
+    return environment
 
 if __name__ == '__main__':
-    print('df','\n',df.head())
-    print('exchange.data_frame','\n',exchange.data_frame.head())
+    STEP = 100
+
+    file_path = './exchange/data/coinbase-1h-btc-usd.csv'
+    environment = get_env(file_path)
+
+    print('environment.exchange.data_frame','\n',environment.exchange.data_frame.head())
 
     obs = environment.reset()
 
