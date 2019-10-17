@@ -1,5 +1,16 @@
-from develop.envirnment.data.load_data import df
-from ..config import STEP
+STEP = 100
+
+import pandas as pd
+
+df = pd.read_csv('./exchange/data/coinbase-1h-btc-usd.csv')
+df = df[['Open','High','Low','Close','VolumeFrom']]
+
+df.rename(columns={'Open': 'open',
+                   'High': 'high',
+                   'Low' : 'low',
+                   'Close':'close',
+                   'VolumeFrom':'volumn'
+                    }, inplace = True)
 
 from tensortrade.environments import TradingEnvironment
 from tensortrade.exchanges.simulated import SimulatedExchange
@@ -22,9 +33,50 @@ exchange = SimulatedExchange(base_instrument='USDT',
                              feature_pipeline=feature_pipeline
                              )
 
+
+
 exchange.data_frame = df[:STEP]
 
 environment = TradingEnvironment(exchange=exchange,
                                  action_strategy=action_strategy,
                                  reward_strategy=reward_strategy,
                                  feature_pipeline=feature_pipeline)
+
+if __name__ == '__main__':
+    print('df','\n',df.head())
+    print('exchange.data_frame','\n',exchange.data_frame.head())
+
+    obs = environment.reset()
+
+    action = 1
+    steps = 0
+    episodes = 5
+    steps_completed = 0
+    episodes_completed = 0
+    average_reward = 0
+
+    performance = {}
+    while (episodes is not None and episodes_completed < episodes):
+
+        obs, reward, done, info = environment.step(action)
+
+        if steps_completed % 10 == 0:
+            print('eposide: {}/{},step: {}/{}'.format(episodes_completed, episodes, steps_completed, steps))
+
+        steps_completed += 1
+        average_reward -= average_reward / steps_completed
+        average_reward += reward / (steps_completed + 1)
+
+        exchange_performance = info.get('exchange').performance
+        performance = exchange_performance if len(exchange_performance) > 0 else performance
+
+        if done:
+            episodes_completed += 1
+            obs = environment.reset()
+
+    print("Finished testing btc_simulate_environment.")
+    print("Total episodes: {} ({} timesteps).".format(episodes_completed, steps_completed))
+    print("Average reward: {}.".format(average_reward))
+    print("Performance[-5]: {}.".format(performance[-5:]))
+
+    print('done')
