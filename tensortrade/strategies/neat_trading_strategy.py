@@ -86,7 +86,37 @@ class NeatTradingStrategy(TradingStrategy):
         raise NotImplementedError
 
     def eval_genome(self, genomes, config):
+        print("config", config)
         for genome_id, genome in genomes:
+            net = neat.nn.FeedForwardNetwork.create(genome, config)
+            while True:
+
+            steps_completed = 0
+            episodes_completed = 0
+            average_reward = 0
+
+            obs, state, dones = self._environment.reset(), None, [False]
+
+            performance = {}
+
+            while (steps is not None and (steps == 0 or steps_completed < steps)) or (episodes is not None and episodes_completed < episodes):
+                actions, state = self._agent.predict(obs, state=state, mask=dones)
+                obs, rewards, dones, info = self._environment.step(actions)
+
+                steps_completed += 1
+                average_reward -= average_reward / steps_completed
+                average_reward += rewards[0] / (steps_completed + 1)
+
+                exchange_performance = info[0].get('exchange').performance
+                performance = exchange_performance if len(exchange_performance) > 0 else performance
+
+                if dones[0]:
+                    if episode_callback is not None and episode_callback(self._environment._exchange.performance):
+                        break
+
+                    episodes_completed += 1
+                    obs = self._environment.reset()
+
             net = neat.nn.FeedForwardNetwork.create(genome, config)
             while True:
                 action = net.activate(xi)
