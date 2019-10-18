@@ -1,101 +1,40 @@
-EPOSIDE = 5000
+EPOSIDE = 50
+
 from environment.btc_simulate import get_env
+from matplotlib import pyplot as plt
 
 from tensortrade.strategies import TensorforceTradingStrategy
 from tensorforce.agents import Agent
 
-
-dqn_config = {
-    "type": "dqn_agent",
-
-    "update_mode": {
-        "unit": "timesteps",
-        "batch_size": 64,
-        "frequency": 4
-    },
-
-    "memory": {
-        "type": "replay",
-        "capacity": 10000,
-        "include_next_states": True
-    },
-
-    "optimizer": {
-        "type": "clipped_step",
-        "clipping_value": 0.1,
-        "optimizer": {
-            "type": "adam",
-            "learning_rate": 1e-3
-        }
-    },
-
-    "discount": 0.999,
-    "entropy_regularization": None,
-    "double_q_model": True,
-
-    "target_sync_frequency": 1000,
-    "target_update_weight": 1.0,
-
-    "actions_exploration": {
-        "type": "epsilon_anneal",
-        "initial_epsilon": 0.5,
-        "final_epsilon": 0.,
-        "timesteps": 1000000000
-    },
-
-    "saver": {
-        "directory": None,
-        "seconds": 600
-    },
-    "summarizer": {
-        "directory": None,
-        "labels": ["graph", "total-loss"]
-    },
-    "execution": {
-        "type": "single",
-        "session_config": None,
-        "distributed_spec": None
-    }
-}
-
-ppo_spec = {
-    "type": "ppo_agent",
-    "step_optimizer": {
-        "type": "adam",
-        "learning_rate": 1e-4
-    },
-    "discount": 0.99,
-    "likelihood_ratio_clipping": 0.2,
-}
-
 network_spec = [
-    dict( type='dense', size=64 ),
-    dict( type='dense', size=32 )
+    dict(type='dense', size=128, activation="tanh"),
+    dict(type='dense', size=64, activation="tanh"),
+    dict(type='dense', size=32, activation="tanh")
 ]
 
-def agent(env,sepc = ppo_spec):
+agent_spec = {
+    "type": "ppo",
+    "learning_rate": 1e-4,
+    "discount": 0.99,
+    "likelihood_ratio_clipping": 0.2,
+    "estimate_terminal": False,
+    "max_episode_timesteps": 2000,
+    "network": network_spec,
+    "batch_size": 10,
+    "update_frequency": "never"
+}
 
-    return Agent.from_spec(
-        spec=sepc,
-        kwargs=dict(
-            states=env.states,
-            actions=env.actions,
-            network=network_spec,
-        )
-    )
 
-
-def load_strategy(df_file_path,agent_spec = ppo_spec):
+def load_strategy(df_file_path,agent_spec = agent_spec):
     env = get_env(df_file_path)
     strategy = TensorforceTradingStrategy(environment=env,
-                                          agent_spec= agent_spec,
-                                          network_spec=network_spec)
+                                          agent_spec= agent_spec)
 
     return strategy
 
 import numpy as np
 def episode_callback(r):
-    if r.global_episode %10 ==0:
+    if r.global_episodes %10 ==0:
         print( '  average_reward:  %.2f' %(np.mean(r.episode_rewards[:-10])))
 
     return True
@@ -103,15 +42,17 @@ def episode_callback(r):
 
 if __name__ == '__main__':
     df_file_path = 'environment/exchange/data/coinbase-1h-btc-usd.csv'
-    strategy = load_strategy(df_file_path, agent_spec=ppo_spec)
+    strategy = load_strategy(df_file_path, agent_spec=agent_spec)
 
     if False:
         strategy.restore_agent(path="./agents/ppo_btc_1h")
 
-    performance = strategy.run(episodes=EPOSIDE, testing=False,episode_callback=episode_callback)
-
-    strategy.save_agent(path="./agents/ppo_btc_1h")
-    strategy._runner.close()
-
+    performance = strategy.run(episodes=EPOSIDE ,evaluation=False,episode_callback=episode_callback)
     print(performance[-5:])
+    performance.balance.plot()
+    #plt.show()
+    plt.savefig('./figure/balance.png')
+
+    strategy.save_agent(directory='agents')
+
     print('done')
