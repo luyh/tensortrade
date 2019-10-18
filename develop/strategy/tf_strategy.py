@@ -39,7 +39,7 @@ def episode_callback(r):
 
     return True
 
-
+import datetime
 if __name__ == '__main__':
     df_file_path = 'environment/exchange/data/coinbase-1h-btc-usd.csv'
     strategy = load_strategy(df_file_path, agent_spec=agent_spec)
@@ -53,7 +53,8 @@ if __name__ == '__main__':
     print(performance[-5:])
     performance.balance.plot()
     #plt.show()
-    plt.savefig('./data/figure/balance.png')
+    now = datetime.datetime.now().strftime("%m%d%H%M%S")
+    plt.savefig('./data/figure/balance_{}.png'.format(now))
 
     checkpoint_path = strategy.save_agent(directory='./data/agents')
     print(checkpoint_path)
