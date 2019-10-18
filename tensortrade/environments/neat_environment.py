@@ -16,21 +16,19 @@ import gym
 import logging
 import pandas as pd
 import numpy as np
+import tensortrade.exchanges as exchanges
+import tensortrade.actions as actions
+import tensortrade.rewards as rewards
+import tensortrade.features as features
 
 from gym import spaces
 from typing import Union, Tuple, List
-# from tensorforce.environments import Environment
 
 from tensortrade.actions import ActionStrategy, TradeActionUnion
 from tensortrade.rewards import RewardStrategy
 from tensortrade.exchanges import InstrumentExchange
 from tensortrade.features import FeaturePipeline
 from tensortrade.trades import Trade
-
-StateType = Union[bool, int, float]
-StateShape = Union[int, List[int], Tuple[int, ...]]
-MinMaxValue = Union[int, float]
-
 
 
 class NeatEnvironment(gym.Env):
@@ -50,12 +48,15 @@ class NeatEnvironment(gym.Env):
             feature_pipeline (optional): The pipeline of features to pass the observations through.
             kwargs (optional): Additional arguments for tuning the environment, logging, etc.
         """
-
         super().__init__()
 
-        self._exchange = exchange
-        self._action_strategy = action_strategy
-        self._reward_strategy = reward_strategy
+        self._exchange = exchanges.get(exchange) if isinstance(exchange, str) else exchange
+        self._action_strategy = actions.get(action_strategy) if isinstance(
+            action_strategy, str) else action_strategy
+        self._reward_strategy = rewards.get(reward_strategy) if isinstance(
+            reward_strategy, str) else reward_strategy
+        self._feature_pipeline = features.get(feature_pipeline) if isinstance(
+            feature_pipeline, str) else feature_pipeline
 
         if feature_pipeline is not None:
             self._exchange.feature_pipeline = feature_pipeline
@@ -109,32 +110,6 @@ class NeatEnvironment(gym.Env):
     def feature_pipeline(self, feature_pipeline: FeaturePipeline):
         self._exchange.feature_pipeline = feature_pipeline
 
-    @property
-    def states(self) -> Tuple[StateType, StateShape]:
-        """The state space specification, required for `tensorforce` agents.
-
-        The tuple contains the following attributes:
-            - type: Either 'bool', 'int', or 'float'.
-            - shape: The shape of the space. An `int` or `list`/`tuple` of `int`s.
-        """
-        from tensorforce.contrib.openai_gym import OpenAIGym
-        return OpenAIGym.specs_from_gym_spaces(space = self.observation_space)
-
-
-    @property
-    def actions(self) -> Tuple[StateType, StateShape, int, MinMaxValue, MinMaxValue]:
-        """The action space specification, required for `tensorforce` agents.
-
-        The tuple contains the following attributes:
-            - type: Either 'bool', 'int', or 'float'.
-            - shape: The shape of the space. An `int` or `list`/`tuple` of `int`s.
-            - num_actions (required if type == 'int'): The number of discrete actions.
-            - min_value (optional if type == 'float'): An `int` or `float`. Defaults to `None`.
-            - max_value (optional if type == 'float'): An `int` or `float`. Defaults to `None`.
-        """
-        from tensorforce.contrib.openai_gym import OpenAIGym
-        return OpenAIGym.specs_from_gym_spaces(space = self.action_space)
-
     def _take_action(self, action: TradeActionUnion) -> Trade:
         """Determines a specific trade to be taken and executes it within the exchange.
 
@@ -159,7 +134,9 @@ class NeatEnvironment(gym.Env):
         self._current_step += 1
 
         observation = self._exchange.next_observation()
-
+        if len(observation) != 0:
+            observation = observation[0]
+            observation = np.nan_to_num(observation)
         return observation
 
     def _get_reward(self, trade: Trade) -> float:
@@ -168,13 +145,14 @@ class NeatEnvironment(gym.Env):
         Returns:
             A float corresponding to the benefit earned by the action taken this step.
         """
-        reward: float = self._reward_strategy.get_reward(
-            current_step=self._current_step, trade=trade)
+        reward = self._reward_strategy.get_reward(current_step=self._current_step, trade=trade)
+        reward = np.nan_to_num(reward)
 
-        if not np.isfinite(reward):
+        if np.bitwise_not(np.isfinite(reward)):
             raise ValueError('Reward returned by the reward strategy must by a finite float.')
 
         return reward
+
 
     def _done(self) -> bool:
         """Returns whether or not the environment is done and should be restarted.
@@ -217,20 +195,6 @@ class NeatEnvironment(gym.Env):
         info = self._info(executed_trade, filled_trade)
 
         return observation, reward, done, info
-
-    def execute(self, action) -> Tuple[pd.DataFrame, float, bool, dict]:
-        """Run one timestep within the environment based on the specified action, required for `tensorforce` agents.
-
-        Arguments:
-            action: The trade action provided by the agent for this timestep.
-
-        Returns:
-            observation (np.ndarray): Provided by the environment's exchange, often OHLCV or tick trade history data points.
-            terminal (bool): If `True`, the environment is complete and should be restarted.
-            reward (float): An amount corresponding to the benefit earned by the action taken this timestep.
-        """
-        observation, done, reward, _ = self.step(action)
-        return observation, reward, done
 
     def reset(self) -> pd.DataFrame:
         """Resets the state of the environment and returns an initial observation.
