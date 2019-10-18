@@ -7,7 +7,7 @@ from tensortrade.strategies import TensorforceTradingStrategy
 from tensorforce.agents import Agent
 
 network_spec = [
-    dict(type='dense', size=128, activation="tanh"),
+    #dict(type='dense', size=128, activation="tanh"),
     dict(type='dense', size=64, activation="tanh"),
     dict(type='dense', size=32, activation="tanh")
 ]
@@ -44,15 +44,18 @@ if __name__ == '__main__':
     df_file_path = 'environment/exchange/data/coinbase-1h-btc-usd.csv'
     strategy = load_strategy(df_file_path, agent_spec=agent_spec)
 
-    if False:
-        strategy.restore_agent(path="./agents/ppo_btc_1h")
+    if True:
+        try:
+            strategy.restore_agent(directory="./data/agents\agent")
+        except:pass
 
     performance = strategy.run(episodes=EPOSIDE ,evaluation=False,episode_callback=episode_callback)
     print(performance[-5:])
     performance.balance.plot()
     #plt.show()
-    plt.savefig('./figure/balance.png')
+    plt.savefig('./data/figure/balance.png')
 
-    strategy.save_agent(directory='agents')
+    checkpoint_path = strategy.save_agent(directory='./data/agents')
+    print(checkpoint_path)
 
     print('done')
