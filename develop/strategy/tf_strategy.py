@@ -15,8 +15,10 @@ network_spec = [
 agent_spec = {
     "type": "ppo",
     "learning_rate": 1e-4,
-    "discount": 0.99,
-    "likelihood_ratio_clipping": 0.2,
+    'critic_network': 'auto',
+    'critic_optimizer' : dict(optimizer='adam', multi_step=10, learning_rate=1e-3),
+     "discount": 0.99,
+     "likelihood_ratio_clipping": 0.2,
     "estimate_terminal": False,
     "max_episode_timesteps": 2000,
     "network": network_spec,
