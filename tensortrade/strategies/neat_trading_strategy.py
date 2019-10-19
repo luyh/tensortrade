@@ -62,9 +62,21 @@ class NeatTradingStrategy(TradingStrategy):
         return self._environment
 
     def load_config(self):
+<<<<<<< Updated upstream
         return neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          self._neat_config_filename)
+=======
+        config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                         self._neat_config_filename)
+        config.genome_config.num_outputs = 1
+        config.genome_config.output_keys = [1]
+
+        config.genome_config.num_inputs = len(self._environment._exchange.generated_columns)
+        config.genome_config.input_keys = [-i - 1 for i in range(config.genome_config.num_inputs)]
+        return config
+>>>>>>> Stashed changes
 
     def restore_agent(self, path: str, model_path: str = None):
         raise NotImplementedError
@@ -86,6 +98,7 @@ class NeatTradingStrategy(TradingStrategy):
         raise NotImplementedError
 
     def eval_genome(self, genomes, config):
+<<<<<<< Updated upstream
         print("config", config)
         for genome_id, genome in genomes:
             net = neat.nn.FeedForwardNetwork.create(genome, config)
@@ -115,11 +128,63 @@ class NeatTradingStrategy(TradingStrategy):
             #
             #             episodes_completed += 1
             #             obs = self._environment.reset()
+=======
+        for genome_id, genome in genomes:
+            print(config.genome_config.num_outputs)
+            net = neat.nn.RecurrentNetwork.create(genome, config)
+
+            steps = len(self._environment._exchange.data_frame)
+            print("steps", steps)
+            steps_completed = 0
+            episodes_completed = 0
+            average_reward = 0
+
+            obs, dones = self._environment.reset(), [False]
+
+            performance = {}
+
+            actions = [(0, self._environment.action_strategy.n_actions)]
+            print('actions:', actions)
+
+            while (steps is not None and (steps == 0 or steps_completed < (steps +1))):
+                current_dataframe_observation = self._environment._exchange.data_frame[steps_completed:steps_completed+1].values.flatten()
+                print('cdo', current_dataframe_observation)
+                output = net.activate(current_dataframe_observation)
+                # action at current step
+                print("Output : ", output)
+                # feed action into environment to get reward for selected action
+
+                # feed rewards to NEAT to calculate fitness.
+
+                # print checkpoint health.
+                actions, state = self._agent.predict(obs, state=state, mask=dones)
+                print('actions, state', actions, state)
+
+                obs, rewards, dones, info = self._environment.step(actions)
+
+                steps_completed += 1
+                average_reward -= average_reward / steps_completed
+                average_reward += rewards[0] / (steps_completed + 1)
+
+                exchange_performance = info[0].get('exchange').performance
+                performance = exchange_performance if len(exchange_performance) > 0 else performance
+
+                if dones[0]:
+                    if episode_callback is not None and episode_callback(self._environment._exchange.performance):
+                        break
+
+                    episodes_completed += 1
+                    obs = self._environment.reset()
+>>>>>>> Stashed changes
 
             # net = neat.nn.FeedForwardNetwork.create(genome, config)
             # while True:
             #     action = net.activate(xi)
+<<<<<<< Updated upstream
             #     observation, reward, done, info = self.environment.step(action)
+=======
+            #     observation, reward, done, info = self._environment.step(action)
+>>>>>>> Stashed changes
             #     # env.render()
             #     if done:
             #         print("info:", info)
