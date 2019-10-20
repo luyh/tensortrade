@@ -26,6 +26,8 @@ import neat
 from tensortrade.environments.trading_environment import TradingEnvironment
 from tensortrade.features.feature_pipeline import FeaturePipeline
 from tensortrade.strategies import TradingStrategy
+from IPython.display import clear_output
+
 
 
 class NeatTradingStrategy(TradingStrategy):
@@ -91,104 +93,76 @@ class NeatTradingStrategy(TradingStrategy):
     def tune(self, steps: int = None, episodes: int = None, callback: Callable[[pd.DataFrame], bool] = None) -> pd.DataFrame:
         raise NotImplementedError
 
-    def eval_genome(self, genomes, config):
+    def _eval_genome(self, genomes, config):
         for genome_id, genome in genomes:
-            print(config.genome_config.num_outputs)
-            net = neat.nn.RecurrentNetwork.create(genome, config)
-
+            print(".", end = '')
+            # calculate the steps and keep track of some intial variables
             steps = len(self._environment._exchange.data_frame)
-            print("steps", steps)
             steps_completed = 0
-            episodes_completed = 0
             average_reward = 0
-
             obs, dones = self._environment.reset(), [False]
-
             performance = {}
 
-            actions = [(0, self._environment.action_strategy.n_actions)]
-            print('actions:', actions)
+            # we need to know how many actions we are able to take
+            actions = self._environment.action_strategy.n_actions
 
-            while (steps is not None and (steps == 0 or steps_completed < (steps +1))):
+            # Initialize the network for this genome
+            net = neat.nn.RecurrentNetwork.create(genome, config)
+
+            # set inital reward
+            genome.fitness = 0.0
+            # walk all timesteps to evaluate our genome
+            while (steps is not None and (steps == 0 or steps_completed < (steps))):
+                # Get the current data observation
                 current_dataframe_observation = self._environment._exchange.data_frame[steps_completed:steps_completed+1].values.flatten()
-                print('cdo', current_dataframe_observation)
+
+                # activate() the genome and calculate the action output
                 output = net.activate(current_dataframe_observation)
+
                 # action at current step
-                print("Output : ", output)
+                action = int(output[0] * actions)
+
                 # feed action into environment to get reward for selected action
+                obs, rewards, dones, info = self.environment.step(action)
 
                 # feed rewards to NEAT to calculate fitness.
-
-                # print checkpoint health.
-                actions, state = self._agent.predict(obs, state=state, mask=dones)
-                print('actions, state', actions, state)
-
-                obs, rewards, dones, info = self._environment.step(actions)
-
+                genome.fitness += rewards
                 steps_completed += 1
                 average_reward -= average_reward / steps_completed
-                average_reward += rewards[0] / (steps_completed + 1)
+                average_reward += rewards / (steps_completed + 1)
 
-                exchange_performance = info[0].get('exchange').performance
+                exchange_performance = info.get('exchange').performance
                 performance = exchange_performance if len(exchange_performance) > 0 else performance
 
-                if dones[0]:
-                    if episode_callback is not None and episode_callback(self._environment._exchange.performance):
-                        break
 
-                    episodes_completed += 1
+                if dones:
+                    # if episode_callback is not None and episode_callback(self._environment._exchange.performance):
                     obs = self._environment.reset()
+                    break
+        print(' ')
+        clear_output()
 
-        return reward
 
     def run(self, generations: int = None, testing: bool = True, episode_callback: Callable[[pd.DataFrame], bool] = None) -> pd.DataFrame:
 
         # create population
-        p = neat.Population(self._config)
+        pop = neat.Population(self._config)
 
         # add reporting
-        p.add_reporter(neat.StdOutReporter(True))
+        pop.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
-        p.add_reporter(stats)
-        p.add_reporter(neat.Checkpointer(5))
+        pop.add_reporter(stats)
+        pop.add_reporter(neat.Checkpointer(5))
 
         # Run for up to 300 generations.
-        winner = p.run(self.eval_genome, generations)
+        winner = pop.run(self._eval_genome, generations)
 
         # Display the winning genome.
         print('\nBest genome:\n{!s}'.format(winner))
 
         # Show output of the most fit genome against training data.
-        print('\nOutput:')
-        # winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
-        # for xi, xo in zip(xor_inputs, xor_outputs):
-        #     output = winner_net.activate(xi)
-        #     print("input {!r}, expected output {!r}, got {!r}".format(xi, xo, output))
+        # print('\nOutput:')
 
-        node_names = {-1:'A', -2: 'B', 0:'A XOR B'}
-        visualize.draw_net(config, winner, True, node_names=node_names)
-        visualize.plot_stats(stats, ylog=False, view=True)
-        visualize.plot_species(stats, view=True)
+        # p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
 
-        p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
-        p.run(self._environment.reward_strategy, 10)
-
-
-
-        # self._runner.run(testing=testing,
-        #                  num_timesteps=steps,
-        #                  num_episodes=episodes,
-        #                  max_episode_timesteps=self._max_episode_timesteps,
-        #                  episode_finished=episode_callback)
-        #
-        # n_episodes = self._runner.episode
-        # n_timesteps = self._runner.timestep
-        # avg_reward = np.mean(self._runner.episode_rewards)
-        #
-        # print("Finished running strategy.")
-        # print("Total episodes: {} ({} timesteps).".format(n_episodes, n_timesteps))
-        # print("Average reward: {}.".format(avg_reward))
-        #
-        # self._runner.close()
-
-        return self._environment._exchange.performance
+        return [self._environment._exchange.performance, winner, stats]
