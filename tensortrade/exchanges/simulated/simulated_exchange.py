@@ -68,7 +68,6 @@ class SimulatedExchange(InstrumentExchange):
     @data_frame.setter
     def data_frame(self, data_frame: pd.DataFrame):
         self._data_frame = data_frame
-
         self.pretransform()
 
     @property
@@ -143,7 +142,7 @@ class SimulatedExchange(InstrumentExchange):
                 self._data_frame, self.generated_space)
             self._previously_transformed = True # prevents multiple transform calls on data frame assignment
             return True
-            
+
         return False
 
     def current_price(self, symbol: str) -> float:
