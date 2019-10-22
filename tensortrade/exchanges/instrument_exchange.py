@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import pandas as pd
+import sys
 import numpy as np
+import tensortrade.utils.threadsafe_iter as ThreadsafeIter
 
 from abc import ABCMeta, abstractmethod
 from typing import Dict, Union, List, Generator
@@ -23,6 +25,12 @@ from tensortrade.trades import Trade
 from tensortrade.features import FeaturePipeline
 
 TypeString = Union[type, str]
+def threadsafe_observation(f):
+    """A decorator that takes a generator function and makes it thread-safe.
+    """
+    def g(*a, **kw):
+        return ThreadsafeIter.ThreadsafeIter(f(*a, **kw))
+    return g
 
 
 class InstrumentExchange(object, metaclass=ABCMeta):
@@ -178,6 +186,7 @@ class InstrumentExchange(object, metaclass=ABCMeta):
     def _create_observation_generator(self) -> Generator[pd.DataFrame, None, None]:
         raise NotImplementedError
 
+    @threadsafe_observation
     def next_observation(self) -> np.ndarray:
         """Generate the next observation from the exchange.
 
@@ -192,6 +201,7 @@ class InstrumentExchange(object, metaclass=ABCMeta):
             return observation.values
 
         return observation
+
 
     def instrument_balance(self, symbol: str) -> float:
         """The current balance of the specified symbol on the exchange, denoted in the base instrument.

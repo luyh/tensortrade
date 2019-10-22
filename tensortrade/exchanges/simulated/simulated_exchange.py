@@ -68,6 +68,7 @@ class SimulatedExchange(InstrumentExchange):
     @data_frame.setter
     def data_frame(self, data_frame: pd.DataFrame):
         self._data_frame = data_frame
+        self._previously_transformed = False
         self.pretransform()
 
     @property
