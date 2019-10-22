@@ -93,54 +93,53 @@ class NeatTradingStrategy(TradingStrategy):
     def tune(self, steps: int = None, episodes: int = None, callback: Callable[[pd.DataFrame], bool] = None) -> pd.DataFrame:
         raise NotImplementedError
 
-    def _eval_genome(self, genomes, config):
-        for genome_id, genome in genomes:
-            print(".", end = '')
-            # calculate the steps and keep track of some intial variables
-            steps = len(self._environment._exchange.data_frame)
-            steps_completed = 0
-            average_reward = 0
-            obs, dones = self._environment.reset(), [False]
-            performance = {}
+    def _eval_genome(self, genome, config):
+        print(".", end = '')
+        # calculate the steps and keep track of some intial variables
+        steps = len(self._environment._exchange.data_frame)
+        steps_completed = 0
+        average_reward = 0
+        obs, dones = self._environment.reset(), [False]
+        performance = {}
 
-            # we need to know how many actions we are able to take
-            actions = self._environment.action_strategy.n_actions
+        # we need to know how many actions we are able to take
+        actions = self._environment.action_strategy.n_actions
 
-            # Initialize the network for this genome
-            net = neat.nn.RecurrentNetwork.create(genome, config)
+        # Initialize the network for this genome
+        net = neat.nn.RecurrentNetwork.create(genome, config)
 
-            # set inital reward
-            genome.fitness = 0.0
-            # walk all timesteps to evaluate our genome
-            while (steps is not None and (steps == 0 or steps_completed < (steps))):
-                # Get the current data observation
-                current_dataframe_observation = self._environment._exchange.data_frame[steps_completed:steps_completed+1].values.flatten()
+        # set inital reward
+        genome.fitness = 0.0
+        # walk all timesteps to evaluate our genome
+        while (steps is not None and (steps == 0 or steps_completed < (steps))):
+            # Get the current data observation
+            current_dataframe_observation = self._environment._exchange.data_frame[steps_completed:steps_completed+1].values.flatten()
 
-                # activate() the genome and calculate the action output
-                output = net.activate(current_dataframe_observation)
+            # activate() the genome and calculate the action output
+            output = net.activate(current_dataframe_observation)
 
-                # action at current step
-                action = int(output[0] * actions)
+            # action at current step
+            action = int(output[0] * actions)
 
-                # feed action into environment to get reward for selected action
-                obs, rewards, dones, info = self.environment.step(action)
+            # feed action into environment to get reward for selected action
+            obs, rewards, dones, info = self.environment.step(action)
 
-                # feed rewards to NEAT to calculate fitness.
-                genome.fitness += rewards
-                steps_completed += 1
-                average_reward -= average_reward / steps_completed
-                average_reward += rewards / (steps_completed + 1)
+            # feed rewards to NEAT to calculate fitness.
+            genome.fitness += rewards
+            steps_completed += 1
+            average_reward -= average_reward / steps_completed
+            average_reward += rewards / (steps_completed + 1)
 
-                exchange_performance = info.get('exchange').performance
-                performance = exchange_performance if len(exchange_performance) > 0 else performance
+            exchange_performance = info.get('exchange').performance
+            performance = exchange_performance if len(exchange_performance) > 0 else performance
 
 
-                if dones:
-                    # if episode_callback is not None and episode_callback(self._environment._exchange.performance):
-                    obs = self._environment.reset()
-                    break
+            if dones:
+                # if episode_callback is not None and episode_callback(self._environment._exchange.performance):
+                obs = self._environment.reset()
+                break
         print(' ')
-        clear_output()
+        # clear_output()
 
 
     def run(self, generations: int = None, testing: bool = True, episode_callback: Callable[[pd.DataFrame], bool] = None) -> pd.DataFrame:
@@ -155,7 +154,10 @@ class NeatTradingStrategy(TradingStrategy):
         pop.add_reporter(neat.Checkpointer(5))
 
         # Run for up to 300 generations.
-        winner = pop.run(self._eval_genome, generations)
+        e = neat.ThreadedEvaluator(4, self._eval_genome)
+        # e = neat.ParallelEvaluator(4, self._eval_genome)
+
+        winner = pop.run(e.evaluate, generations)
 
         # Display the winning genome.
         print('\nBest genome:\n{!s}'.format(winner))
