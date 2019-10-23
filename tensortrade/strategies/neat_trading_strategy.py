@@ -92,7 +92,7 @@ class NeatTradingStrategy(TradingStrategy):
 
     def _eval_population(self, genomes, config):
         for genome_id, genome in genomes:
-            print(".", end = '')
+            print("*", end = '')
             self.eval_genome(genome)
         print(' ')
         clear_output()
@@ -116,7 +116,10 @@ class NeatTradingStrategy(TradingStrategy):
         # walk all timesteps to evaluate our genome
         while (steps is not None and (steps == 0 or steps_completed < (steps))):
             # Get the current data observation
-            current_dataframe_observation = self._environment._exchange.data_frame[steps_completed:steps_completed+1].values.flatten()
+            current_dataframe_observation = self._environment._exchange.data_frame[steps_completed:steps_completed+1]
+
+            # transform as needed
+            current_dataframe_observation = current_dataframe_observation.drop('symbol', axis='columns').values.flatten()
 
             # activate() the genome and calculate the action output
             output = net.activate(current_dataframe_observation)
@@ -149,6 +152,7 @@ class NeatTradingStrategy(TradingStrategy):
         pop.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
         pop.add_reporter(stats)
+        pop.add_reporter(self.profit_report)
         pop.add_reporter(neat.Checkpointer(5))
 
         # Run for up to 300 generations.
