@@ -67,11 +67,8 @@ class NeatTradingStrategy(TradingStrategy):
         config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          self._neat_config_filename)
-        config.genome_config.num_outputs = 1
-        config.genome_config.output_keys = [1]
-
-        config.genome_config.num_inputs = len(self._environment._exchange.generated_columns)
-        config.genome_config.input_keys = [-i - 1 for i in range(config.genome_config.num_inputs)]
+        # config.genome_config.num_inputs = len(self._environment._exchange.generated_columns)
+        # config.genome_config.input_keys = [-i - 1 for i in range(config.genome_config.num_inputs)]
         return config
 
     def restore_agent(self, path: str, model_path: str = None):
@@ -93,54 +90,54 @@ class NeatTradingStrategy(TradingStrategy):
     def tune(self, steps: int = None, episodes: int = None, callback: Callable[[pd.DataFrame], bool] = None) -> pd.DataFrame:
         raise NotImplementedError
 
-    def _eval_genome(self, genomes, config):
+    def _eval_population(self, genomes, config):
         for genome_id, genome in genomes:
             print(".", end = '')
-            # calculate the steps and keep track of some intial variables
-            steps = len(self._environment._exchange.data_frame)
-            steps_completed = 0
-            average_reward = 0
-            obs, dones = self._environment.reset(), [False]
-            performance = {}
-
-            # we need to know how many actions we are able to take
-            actions = self._environment.action_strategy.n_actions
-
-            # Initialize the network for this genome
-            net = neat.nn.RecurrentNetwork.create(genome, config)
-
-            # set inital reward
-            genome.fitness = 0.0
-            # walk all timesteps to evaluate our genome
-            while (steps is not None and (steps == 0 or steps_completed < (steps))):
-                # Get the current data observation
-                current_dataframe_observation = self._environment._exchange.data_frame[steps_completed:steps_completed+1].values.flatten()
-
-                # activate() the genome and calculate the action output
-                output = net.activate(current_dataframe_observation)
-
-                # action at current step
-                action = int(output[0] * actions)
-
-                # feed action into environment to get reward for selected action
-                obs, rewards, dones, info = self.environment.step(action)
-
-                # feed rewards to NEAT to calculate fitness.
-                genome.fitness += rewards
-                steps_completed += 1
-                average_reward -= average_reward / steps_completed
-                average_reward += rewards / (steps_completed + 1)
-
-                exchange_performance = info.get('exchange').performance
-                performance = exchange_performance if len(exchange_performance) > 0 else performance
-
-
-                if dones:
-                    # if episode_callback is not None and episode_callback(self._environment._exchange.performance):
-                    obs = self._environment.reset()
-                    break
+            self.eval_genome(genome)
         print(' ')
         clear_output()
+
+    def eval_genome(self, genome):
+        # Initialize the network for this genome
+        net = neat.nn.RecurrentNetwork.create(genome, self._config)
+
+        # calculate the steps and keep track of some intial variables
+        steps = len(self._environment._exchange.data_frame)
+        steps_completed = 0
+        average_reward = 0
+        obs, dones = self._environment.reset(), [False]
+        performance = {}
+
+        # we need to know how many actions we are able to take
+        actions = self._environment.action_strategy.n_actions
+
+        # set inital reward
+        genome.fitness = 0.0
+        # walk all timesteps to evaluate our genome
+        while (steps is not None and (steps == 0 or steps_completed < (steps))):
+            # Get the current data observation
+            current_dataframe_observation = self._environment._exchange.data_frame[steps_completed:steps_completed+1].values.flatten()
+
+            # activate() the genome and calculate the action output
+            output = net.activate(current_dataframe_observation)
+
+            # action at current step
+            action = int(output[0] * actions)
+
+            # feed action into environment to get reward for selected action
+            obs, rewards, dones, info = self.environment.step(action)
+
+            # feed rewards to NEAT to calculate fitness.
+            genome.fitness += rewards
+            steps_completed += 1
+            average_reward -= average_reward / steps_completed
+            average_reward += rewards / (steps_completed + 1)
+
+            exchange_performance = info.get('exchange').performance
+            performance = exchange_performance if len(exchange_performance) > 0 else performance
+
+            if dones:
+                break
 
 
     def run(self, generations: int = None, testing: bool = True, episode_callback: Callable[[pd.DataFrame], bool] = None) -> pd.DataFrame:
@@ -155,7 +152,7 @@ class NeatTradingStrategy(TradingStrategy):
         pop.add_reporter(neat.Checkpointer(5))
 
         # Run for up to 300 generations.
-        winner = pop.run(self._eval_genome, generations)
+        winner = pop.run(self._eval_population, generations)
 
         # Display the winning genome.
         print('\nBest genome:\n{!s}'.format(winner))
