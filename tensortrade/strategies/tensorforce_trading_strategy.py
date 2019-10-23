@@ -44,7 +44,14 @@ class TensorforceTradingStrategy(TradingStrategy):
         self._environment = Environment.create(
             environment='gym', level=environment, max_episode_timesteps=self._max_episode_timesteps)
 
-        self._agent = Agent.create(agent=agent_spec, environment=self._environment)
+        self._agent = Agent.create(agent=agent_spec, environment=self._environment,
+                                   summarizer=dict(
+                                       directory='data/summaries',
+                                       labels=['graph', 'losses', 'rewards'],  # list of labels, or 'all'
+                                       frequency=100  # store values every 100 timesteps
+                                       # (infrequent update summaries every update; other configurations possible)
+                                   ),
+                                   )
 
         self._runner = Runner(agent=self._agent, environment=self._environment,
                               save_best_agent=save_best_agent)
@@ -85,7 +92,8 @@ class TensorforceTradingStrategy(TradingStrategy):
             append_timestep: Whether the timestep should be appended to filename to prevent overwriting previous models.
                 Defaults to `False`.
         """
-        self._agent.save(directory=directory, filename=filename, append_timestep=append_timestep)
+        checkpoint_path = self._agent.save(directory=directory, filename=filename, append_timestep=append_timestep)
+        return checkpoint_path
 
     def _finished_episode_cb(self, runner: Runner) -> bool:
         n_episodes = runner.episodes

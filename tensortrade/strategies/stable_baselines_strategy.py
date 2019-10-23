@@ -29,7 +29,8 @@ from stable_baselines import DQN
 
 from tensortrade.environments.trading_environment import TradingEnvironment
 from tensortrade.strategies import TradingStrategy
-
+from tqdm import tqdm
+import time
 
 class StableBaselinesTradingStrategy(TradingStrategy):
     """A trading strategy capable of self tuning, training, and evaluating with stable-baselines."""
@@ -53,6 +54,8 @@ class StableBaselinesTradingStrategy(TradingStrategy):
 
         self._environment = DummyVecEnv([lambda: environment])
         self._agent = self._model(policy, self._environment, **self._model_kwargs)
+
+        self.episode_times = []  # list of durations for the episodes
 
     def restore_agent(self, path: str):
         """Deserialize the strategy's learning agent from a file.
@@ -85,24 +88,35 @@ class StableBaselinesTradingStrategy(TradingStrategy):
         obs, state, dones = self._environment.reset(), None, [False]
 
         performance = {}
+        # add progress bar
+        with tqdm(total=episodes) as pbar:
+            while (steps is not None and (steps == 0 or steps_completed < steps)) \
+                    or (episodes is not None and episodes_completed < episodes):
 
-        while (steps is not None and (steps == 0 or steps_completed < steps)) or (episodes is not None and episodes_completed < episodes):
-            actions, state = self._agent.predict(obs, state=state, mask=dones)
-            obs, rewards, dones, info = self._environment.step(actions)
+                episode_start_time = time.time()
 
-            steps_completed += 1
-            average_reward -= average_reward / steps_completed
-            average_reward += rewards[0] / (steps_completed + 1)
+                actions, state = self._agent.predict(obs, state=state, mask=dones)
+                obs, rewards, dones, info = self._environment.step(actions)
 
-            exchange_performance = info[0].get('exchange').performance
-            performance = exchange_performance if len(exchange_performance) > 0 else performance
+                steps_completed += 1
+                average_reward -= average_reward / steps_completed
+                average_reward += rewards[0] / (steps_completed + 1)
 
-            if dones[0]:
-                if episode_callback is not None and episode_callback(self._environment._exchange.performance):
-                    break
+                exchange_performance = info[0].get('exchange').performance
+                performance = exchange_performance if len(exchange_performance) > 0 else performance
+                #pbar.update(1)
+                if dones[0]:
+                    if episode_callback is not None and episode_callback(self._environment._exchange.performance):
+                        break
 
-                episodes_completed += 1
-                obs = self._environment.reset()
+                    episodes_completed += 1
+                    # Update our episode stats.
+                    time_passed = time.time() - episode_start_time
+                    self.episode_times.append(time_passed)
+
+                    pbar.update(1)
+
+                    obs = self._environment.reset()
 
         print("Finished running strategy.")
         print("Total episodes: {} ({} timesteps).".format(episodes_completed, steps_completed))

@@ -148,8 +148,11 @@ class InstrumentExchange(object, metaclass=ABCMeta):
             return net_worth
 
         for symbol, amount in portfolio.items():
-            current_price = self.current_price(symbol=symbol)
-            net_worth += current_price * amount
+            if symbol == self.base_instrument:
+                pass
+            else:
+                current_price = self.current_price(symbol=symbol)
+                net_worth += current_price * amount
 
         return net_worth
 
