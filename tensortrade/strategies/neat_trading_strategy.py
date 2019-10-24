@@ -46,18 +46,7 @@ class NeatTradingStrategy(TradingStrategy):
         self._max_episode_timesteps = kwargs.get('max_episode_timesteps', None)
         self._neat_config_filename = neat_config
         self._config = self.load_config()
-        # save config file
-        # self._agent = Agent.from_spec(spec=agent_spec,
-        #                               kwargs=dict(network=network_spec,
-        #                                           states=environment.states,
-        #                                           actions=environment.actions))
-        #
-        # self._runner = Runner(agent=self._agent, environment=environment)
 
-    # @property
-    # def agent(self):
-    #     """A Tensorforce `Agent` instance that will learn the strategy."""
-    #     return self._agent
 
     @property
     def environment(self):
@@ -104,7 +93,6 @@ class NeatTradingStrategy(TradingStrategy):
         # calculate the steps and keep track of some intial variables
         steps = len(self._environment._exchange.data_frame)
         steps_completed = 0
-        average_reward = 0
         obs, dones = self._environment.reset(), [False]
         performance = {}
 
@@ -133,14 +121,16 @@ class NeatTradingStrategy(TradingStrategy):
             # feed rewards to NEAT to calculate fitness.
             genome.fitness += rewards
             steps_completed += 1
-            average_reward -= average_reward / steps_completed
-            average_reward += rewards / (steps_completed + 1)
 
             exchange_performance = info.get('exchange').performance
             performance = exchange_performance if len(exchange_performance) > 0 else performance
 
             if dones:
                 break
+
+    def profit_report(slef):
+        print("Average Trades:", )
+
 
 
     def run(self, generations: int = None, testing: bool = True, episode_callback: Callable[[pd.DataFrame], bool] = None) -> pd.DataFrame:
@@ -152,7 +142,6 @@ class NeatTradingStrategy(TradingStrategy):
         pop.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
         pop.add_reporter(stats)
-        pop.add_reporter(self.profit_report)
         pop.add_reporter(neat.Checkpointer(5))
 
         # Run for up to 300 generations.
