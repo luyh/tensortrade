@@ -132,7 +132,10 @@ class NeatTradingStrategy(TradingStrategy):
     def profit_report(slef):
         print("Average Trades:", )
 
-
+    def evaluation(self,CHECKPOINT):
+        p = neat.Checkpointer.restore_checkpoint('./checkpoint/neat-checkpoint-%i' % CHECKPOINT)
+        winner = p.run(self._eval_population, 1)  # find the winner in restored population
+        self.eval_genome(winner)
 
     def run(self, generations: int = None, testing: bool = True, episode_callback: Callable[[pd.DataFrame], bool] = None) -> pd.DataFrame:
 
@@ -143,7 +146,8 @@ class NeatTradingStrategy(TradingStrategy):
         pop.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
         pop.add_reporter(stats)
-        pop.add_reporter(neat.Checkpointer(5))
+        pop.add_reporter(neat.Checkpointer(generation_interval = 1,
+                                           filename_prefix='./checkpoint/neat-checkpoint-'))
 
         # Run for up to 300 generations.
         winner = pop.run(self._eval_population, generations)
