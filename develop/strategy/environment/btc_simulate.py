@@ -26,16 +26,22 @@ def get_env(file_path):
 
     normalize = MinMaxNormalizer(inplace=True)
     difference = FractionalDifference(difference_order=0.6, inplace=True)
-    feature_pipeline = FeaturePipeline(steps=[normalize, difference])
+    feature_pipeline = FeaturePipeline(steps=[normalize, ])
+    #feature_pipeline = FeaturePipeline(steps=[normalize, difference])
 
     reward_strategy = SimpleProfitStrategy()
     action_strategy = DiscreteActionStrategy(n_actions=20, instrument_symbol='BTC/USDT')
 
     exchange = SimulatedExchange(base_instrument='USDT',
                                  should_pretransform_obs=True,
-                                 feature_pipeline=feature_pipeline
+                                 feature_pipeline=feature_pipeline,
+                                 min_trade_price = 2000,
+                                 max_trade_price = 20000,
+                                 min_trade_amount = 1E-3,
+                                 max_trade_amount = 2000,
                                  )
     exchange.data_frame = df[:STEP]
+
     environment = TradingEnvironment(exchange=exchange,
                                      action_strategy=action_strategy,
                                      reward_strategy=reward_strategy,
