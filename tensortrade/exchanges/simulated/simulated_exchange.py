@@ -141,8 +141,10 @@ class SimulatedExchange(InstrumentExchange):
                                                                 self.generated_space)
 
     def current_price(self, symbol: str) -> float:
-        frame = self._unmodified_data_frame.loc[self._unmodified_data_frame['symbol'] == symbol, [
-            'close']]
+        try:
+            frame = self._unmodified_data_frame.loc[self._unmodified_data_frame['symbol'] == symbol, [ 'close']]
+        except:
+            frame = self._unmodified_data_frame[[ 'close']]
 
         if frame.empty is False:
             return frame.iloc[self._current_step][0]

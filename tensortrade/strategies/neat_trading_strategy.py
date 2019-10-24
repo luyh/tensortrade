@@ -107,7 +107,8 @@ class NeatTradingStrategy(TradingStrategy):
             current_dataframe_observation = self._environment._exchange.data_frame[steps_completed:steps_completed+1]
 
             # transform as needed
-            current_dataframe_observation = current_dataframe_observation.drop('symbol', axis='columns').values.flatten()
+            #current_dataframe_observation = current_dataframe_observation.drop('symbol', axis='columns').values.flatten()
+            current_dataframe_observation = current_dataframe_observation.values.flatten()
 
             # activate() the genome and calculate the action output
             output = net.activate(current_dataframe_observation)
