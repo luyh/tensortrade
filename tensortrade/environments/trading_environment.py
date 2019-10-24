@@ -132,7 +132,6 @@ class TradingEnvironment(gym.Env):
             The observation provided by the environment's exchange, often OHLCV or tick trade history data points.
         """
         self._current_step += 1
-
         observation = self._exchange.next_observation()
         if len(observation) != 0:
             observation = observation[0]
