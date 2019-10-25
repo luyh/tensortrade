@@ -12,6 +12,8 @@ neat_strategy = NeatTradingStrategy(environment = environment,neat_config = CONF
 
 def run():
     performance, winner, stats = neat_strategy.run(generations = 10, testing = False)
+    with open('./checkpoint/key.pkl', 'wb') as f:
+        pickle.dump(winner.key, f)
 
     # visualize training
     visualize.plot_stats(stats, ylog=False, view=True)
@@ -20,14 +22,11 @@ def run():
 def evaluate(CHECKPOINT):
     p = neat.Checkpointer.restore_checkpoint('./checkpoint/neat-checkpoint-%i' % CHECKPOINT)
     #winner = p.run(neat_strategy._eval_population, 1)  # find the winner in restored population
-    winner = p.population[947]
 
-    with open('./checkpoint/winner.pkl', 'w') as f:
-        pickle.dumps(winner, f)
+    with open('./checkpoint/key.pkl', 'rb') as f:
+        key = pickle.load(f)
 
-    with open('./checkpoint/winner.pkl', 'r') as f:
-        winner = winner.load(f)
-
+    winner = p.population[key]
     neat_strategy.eval_genome(winner)
 
     visualize.draw_net(p.config, winner, True)
