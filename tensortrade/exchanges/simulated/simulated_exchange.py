@@ -232,3 +232,7 @@ class SimulatedExchange(Exchange):
         self._portfolio = {self.base_instrument: self.balance}
         self._trades = pd.DataFrame([], columns=['step', 'symbol', 'type', 'amount', 'price'])
         self._performance = pd.DataFrame([], columns=['step', 'balance', 'net_worth'])
+        self._performance = self._performance.append({
+            'balance': self.balance,
+            'net_worth': self.net_worth,
+        }, ignore_index=True)
