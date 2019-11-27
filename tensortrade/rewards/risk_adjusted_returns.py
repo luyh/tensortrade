@@ -65,8 +65,8 @@ class RiskAdjustedReturns(RewardScheme):
 
     def get_reward(self, current_step: int, trade: Trade) -> float:
         """Return the reward corresponding to the selected risk-adjusted return metric."""
-        returns = self._exchange.performance['net_worth'].diff()
-
+        net_worth = self.exchange.performance['net_worth']
+        net_worth = net_worth.append(pd.Series(self.exchange.net_worth))
+        returns = net_worth.diff().fillna(0)
         risk_adjusted_return = self._return_algorithm(returns)
-
         return risk_adjusted_return
